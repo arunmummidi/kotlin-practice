@@ -1,0 +1,1 @@
+The approach of dividing a complex program into a number of functions is called functional decomposition.
