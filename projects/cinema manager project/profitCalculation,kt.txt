@@ -1,0 +1,15 @@
+fun main() {
+Cinema project profit calculation
+    print("Enter the number of rows:\n> ")
+    val totalrows = readln().toInt()
+    print("Enter the number of seats in each row:\n> ")
+    val seatsperrow = readln().toInt()
+    val firsthalfrows = totalrows / 2
+    val secondhalfrows = totalrows - firsthalfrows
+    val totalseats = firsthalfrows * seatsperrow + secondhalfrows * seatsperrow
+    if (totalseats < 60) {
+        println("Total income:\n$${totalseats * 10} ")
+    } else {
+        println("Total income:\n$${firsthalfrows * seatsperrow * 10 + secondhalfrows * seatsperrow * 8}")
+    }
+}
