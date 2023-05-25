@@ -18,7 +18,7 @@ var transparencyGreen = 0
 var transparencyBlue = 0
 var diffX = 0
 var diffY = 0
-val e = Exception()
+//val e = Exception()
 
 fun main() {
     println("Input the image filename:")
@@ -49,7 +49,7 @@ fun main() {
         exitProcess(0)
     } else {
         println("Do you want to set a transparency color?")
-        val useTransparency = readln().toString().lowercase()
+        val useTransparency = readln().lowercase()
         if(useTransparency == "yes") {
             println("Input a transparency color ([Red] [Green] [Blue]):")
             val inputString = readln().split(' ')
@@ -65,9 +65,9 @@ fun main() {
                         exitProcess(1)
                     }
                 }
-                transparencyRed = inputString[0]?.toInt()
-                transparencyGreen = inputString[1]?.toInt()
-                transparencyBlue = inputString[2]?.toInt()
+                transparencyRed = inputString[0].toInt()
+                transparencyGreen = inputString[1].toInt()
+                transparencyBlue = inputString[2].toInt()
             } catch (e: Exception) {
                 when(e) {
                     is IndexOutOfBoundsException, is NumberFormatException -> {
@@ -158,7 +158,7 @@ fun createWaterMark() {
 
     if (useAlpha == "yes"){
         // Consider alpha values during watermarking
-        var outputImage = BufferedImage(image.width, image.height, TYPE_INT_ARGB) // with alpha
+        val outputImage = BufferedImage(image.width, image.height, TYPE_INT_ARGB) // with alpha
 
         for (y in 0 until image.height){
             for (x in 0 until image.width) {
