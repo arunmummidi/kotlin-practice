@@ -129,10 +129,22 @@ fun createWaterMark() {
         "single" -> {
             println("Input the watermark position ([x 0-$diffX] [y 0-$diffY]):")
             val waterMarkPositionString = readln().split(' ')
-            val x = waterMarkPositionString[0]
-            val y = waterMarkPositionString[1]
+            try {
+                val waterMarkPositionX = waterMarkPositionString[0].toInt()
+                val waterMarkPositionY = waterMarkPositionString[1].toInt()
+                if (waterMarkPositionX !in 0..diffX || waterMarkPositionY !in 0..diffY ) {
+                    println("The position input is out of range.")
+                    exitProcess(1)
+                }
+            } catch (e: Exception) {
+                println("The position input is invalid.")
+                exitProcess(1)
+            }
+
         }
-        "grid" -> println("do grid")
+        "grid" -> {
+
+        }
         else -> {
             println("The position method input is invalid.")
             exitProcess(1)
@@ -184,7 +196,7 @@ fun createWaterMark() {
         println("The watermarked image $outPutFileName has been created.")
         exitProcess(0)
     }
-
+//TODO
     // Do non alpha calculations if user chose to not use Alpha component
     val outputImage = BufferedImage(image.width, image.height, TYPE_INT_ARGB) // No alpha
 
