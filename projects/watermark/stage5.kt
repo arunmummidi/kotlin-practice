@@ -147,8 +147,7 @@ fun createWaterMark() {
             }
         }
         "grid" -> {
-            waterMarkPositionX = 0
-            waterMarkPositionY = 0
+
         }
         else -> {
             println("The position method input is invalid.")
@@ -177,11 +176,8 @@ fun createWaterMark() {
         // Consider alpha values during watermarking
         if (positionMethod == "single") {
             drawWatermark()
+            exitProcess(0)
         }
-
-        ImageIO.write(image, "png", outPutFileHandle)
-        println("The watermarked image $outPutFileName has been created.")
-        exitProcess(0)
     }
 
     // Do non alpha calculations if user chose to not use Alpha component
@@ -210,8 +206,17 @@ fun createWaterMark() {
 }
 
 fun drawWatermark() {
-    for (x in waterMarkPositionX until waterMarkPositionX + waterMark.width - 1){
-        for (y in waterMarkPositionY until waterMarkPositionY + waterMark.height -1) {
+    val image = ImageIO.read(File(imageFile))
+    val waterMark = ImageIO.read(File(waterMarkFile))
+
+    println("Input the output image filename (jpg or png extension):")
+    val outPutFileName = readln()
+
+    val outPutFileHandle = File(outPutFileName)
+    outPutFileHandle.createNewFile()
+
+    for (x in waterMarkPositionX until waterMark.width){
+        for (y in waterMarkPositionY until waterMark.height) {
             val i = Color(image.getRGB(x, y))
             val w = Color(waterMark.getRGB(x - waterMarkPositionX, y - waterMarkPositionY), true)
 
@@ -228,4 +233,6 @@ fun drawWatermark() {
             image.setRGB(x, y, color.rgb)
         }
     }
+    ImageIO.write(image, "png", outPutFileHandle)
+    println("The watermarked image $outPutFileName has been created.")
 }
