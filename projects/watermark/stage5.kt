@@ -18,6 +18,10 @@ var transparencyGreen = 0
 var transparencyBlue = 0
 var diffX = 0
 var diffY = 0
+var waterMarkPositionX = 0
+var waterMarkPositionY = 0
+var color = Color(255, 255, 255)
+var positionMethod = ""
 //val e = Exception()
 
 fun main() {
@@ -125,13 +129,14 @@ fun readWaterMarkTransparency() {
 
 fun createWaterMark() {
     println("Choose the position method (single, grid):")
-    when (readln()) {
+    positionMethod = readln()
+    when (positionMethod) {
         "single" -> {
             println("Input the watermark position ([x 0-$diffX] [y 0-$diffY]):")
             val waterMarkPositionString = readln().split(' ')
             try {
-                val waterMarkPositionX = waterMarkPositionString[0].toInt()
-                val waterMarkPositionY = waterMarkPositionString[1].toInt()
+                waterMarkPositionX = waterMarkPositionString[0].toInt()
+                waterMarkPositionY = waterMarkPositionString[1].toInt()
                 if (waterMarkPositionX !in 0..diffX || waterMarkPositionY !in 0..diffY ) {
                     println("The position input is out of range.")
                     exitProcess(1)
@@ -140,10 +145,10 @@ fun createWaterMark() {
                 println("The position input is invalid.")
                 exitProcess(1)
             }
-
         }
         "grid" -> {
-
+            waterMarkPositionX = 0
+            waterMarkPositionY = 0
         }
         else -> {
             println("The position method input is invalid.")
@@ -170,33 +175,15 @@ fun createWaterMark() {
 
     if (useAlpha == "yes"){
         // Consider alpha values during watermarking
-        val outputImage = BufferedImage(image.width, image.height, TYPE_INT_ARGB) // with alpha
-
-        for (y in 0 until image.height){
-            for (x in 0 until image.width) {
-                val i = Color(image.getRGB(x, y))
-                val w = Color(waterMark.getRGB(x, y), true)
-                var color = Color(255, 255, 255)
-
-                when(w.alpha) {
-                    0 -> color = i //output pixel should be image pixel
-                    255 -> {
-                        color = Color(
-                            (weight * w.red + (100 - weight) * i.red) / 100,
-                            (weight * w.green + (100 - weight) * i.green) / 100,
-                            (weight * w.blue + (100 - weight) * i.blue) / 100
-                        )
-                    }
-                }
-                outputImage.setRGB(x, y, color.rgb)
-            }
+        if (positionMethod == "single") {
+            drawWatermark()
         }
 
-        ImageIO.write(outputImage, "png", outPutFileHandle)
+        ImageIO.write(image, "png", outPutFileHandle)
         println("The watermarked image $outPutFileName has been created.")
         exitProcess(0)
     }
-//TODO
+
     // Do non alpha calculations if user chose to not use Alpha component
     val outputImage = BufferedImage(image.width, image.height, TYPE_INT_ARGB) // No alpha
 
@@ -220,4 +207,25 @@ fun createWaterMark() {
 
     ImageIO.write(outputImage, "png", outPutFileHandle)
     println("The watermarked image $outPutFileName has been created.")
+}
+
+fun drawWatermark() {
+    for (x in waterMarkPositionX until waterMarkPositionX + waterMark.width - 1){
+        for (y in waterMarkPositionY until waterMarkPositionY + waterMark.height -1) {
+            val i = Color(image.getRGB(x, y))
+            val w = Color(waterMark.getRGB(x - waterMarkPositionX, y - waterMarkPositionY), true)
+
+            when(w.alpha) {
+                0 -> color = i //output pixel should be image pixel
+                255 -> {
+                    color = Color(
+                        (weight * w.red + (100 - weight) * i.red) / 100,
+                        (weight * w.green + (100 - weight) * i.green) / 100,
+                        (weight * w.blue + (100 - weight) * i.blue) / 100
+                    )
+                }
+            }
+            image.setRGB(x, y, color.rgb)
+        }
+    }
 }
