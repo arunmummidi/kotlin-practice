@@ -1,6 +1,7 @@
 package watermark
 
 import java.awt.Color
+import java.awt.image.BufferedImage
 import java.awt.image.BufferedImage.*
 import java.io.File
 import java.lang.IndexOutOfBoundsException
@@ -23,6 +24,8 @@ var waterMarkCoordinateY = 0
 var color = Color(255, 255, 255)
 var positionMethod = ""
 var waterMarkHasAlpha = "no"
+var outPutFileName = ""
+//val e = Exception()
 
 fun main() {
     println("Input the image filename:")
@@ -185,12 +188,13 @@ fun invokeAppropriateWaterMark() {
             drawNoAlphaSingleBackground()
             exitProcess(0)
         }
+        else -> println("Do something else")
     }
 }
 
 fun readOutPutFile(): File {
     println("Input the output image filename (jpg or png extension):")
-    val outPutFileName = readln()
+    outPutFileName = readln()
 
     val validFormat = outPutFileName.contains(".jpg") || outPutFileName.contains(".png")
     if (!validFormat) {
@@ -211,6 +215,7 @@ fun drawNoAlphaSingleBackground() {
     Get its file descriptor if valid.*/
     val outPutFileHandle = readOutPutFile()
     outPutFileHandle.createNewFile()
+    val outputImage = BufferedImage(image.width, image.height, TYPE_INT_ARGB) // No alpha
 
     for (y in 0 until waterMark.height){
         for (x in 0 until waterMark.width) {
@@ -231,7 +236,7 @@ fun drawNoAlphaSingleBackground() {
     }
 
     ImageIO.write(image, "png", outPutFileHandle)
-    println("The watermarked image ${outPutFileHandle.name} has been created.")
+    println("The watermarked image $outPutFileName has been created.")
 }
 
 fun drawAlphaSingle() {
@@ -265,7 +270,7 @@ fun drawAlphaSingle() {
     }
 
     ImageIO.write(image, "png", outPutFileHandle)
-    println("The watermarked image ${outPutFileHandle.name} has been created.")
+    println("The watermarked image $outPutFileName has been created.")
 }
 
 fun drawNoAlphaBackgroundGrid() {
@@ -279,19 +284,11 @@ fun drawNoAlphaBackgroundGrid() {
     Get its file descriptor if valid.*/
     val outPutFileHandle = readOutPutFile()
     outPutFileHandle.createNewFile()
-    var offsetX = 0
-    var offsetY = 0
+
     for (x in 0 until image.width) {
         for (y in 0 until image.height) {
-//            val offsetX = x % waterMark.width
-//            val offsetY = y % waterMark.height
-
-            if (x == waterMark.width) {
-                offsetX = 0
-            }
-            if (y == waterMark.height) {
-                offsetY = 0
-            }
+            val offsetX = x % waterMark.width
+            val offsetY = y % waterMark.height
 
             val i = Color(image.getRGB(x, y))
             val w = Color(waterMark.getRGB(offsetX, offsetY))
@@ -306,12 +303,10 @@ fun drawNoAlphaBackgroundGrid() {
                 )
             }
             image.setRGB(x, y, color.rgb)
-            ++offsetX
-            ++offsetY
         }
     }
     ImageIO.write(image, "png", outPutFileHandle)
-    println("The watermarked image ${outPutFileHandle.name} has been created.")
+    println("The watermarked image $outPutFileName has been created.")
 }
 
 fun drawAlphaGrid() {
@@ -334,9 +329,12 @@ and Watermark file.*/
             val i = Color(image.getRGB(x, y))
             val w = Color(waterMark.getRGB(offsetX, offsetY), true)
 
-            when(w.alpha) {
-                0 -> color = i
-                else -> color = Color(
+            val alpha = w.alpha
+
+            if (alpha == 0) {
+                color = i
+            } else if (alpha == 255) {
+                color = Color(
                     (weight * w.red + (100 - weight) * i.red) / 100,
                     (weight * w.green + (100 - weight) * i.green) / 100,
                     (weight * w.blue + (100 - weight) * i.blue) / 100
@@ -347,119 +345,5 @@ and Watermark file.*/
         }
     }
     ImageIO.write(image, "png", outPutFileHandle)
-    println("The watermarked image ${outPutFileHandle.name} has been created.")
+    println("The watermarked image $outPutFileName has been created.")
 }
-
-
-
-
-//fun drawWatermark() {
-//    val image = ImageIO.read(File(imageFile))
-//    val waterMark = ImageIO.read(File(waterMarkFile))
-//
-//    println("Input the output image filename (jpg or png extension):")
-//    val outPutFileName = readln()
-//
-//    val outPutFileHandle = File(outPutFileName)
-//    outPutFileHandle.createNewFile()
-//
-//    for (x in waterMarkCoordinateX until waterMark.width){
-//        for (y in waterMarkCoordinateY until waterMark.height) {
-//            val i = Color(image.getRGB(x, y))
-//            val w = Color(waterMark.getRGB(x - waterMarkCoordinateX, y - waterMarkCoordinateY), true)
-//
-//            when(w.alpha) {
-//                0 -> color = i //output pixel should be image pixel
-//                255 -> {
-//                    color = Color(
-//                        (weight * w.red + (100 - weight) * i.red) / 100,
-//                        (weight * w.green + (100 - weight) * i.green) / 100,
-//                        (weight * w.blue + (100 - weight) * i.blue) / 100
-//                    )
-//                }
-//            }
-//            image.setRGB(x, y, color.rgb)
-//        }
-//    }
-//    ImageIO.write(image, "png", outPutFileHandle)
-//    println("The watermarked image $outPutFileName has been created.")
-//}
-//
-//fun drawWatermarkGrid() {
-//    val image = ImageIO.read(File(imageFile))
-//    val waterMark = ImageIO.read(File(waterMarkFile))
-//
-//    println("Input the output image filename (jpg or png extension):")
-//    val outPutFileName = readlnOrNull() ?: ""
-//
-//    val outPutFileHandle = File(outPutFileName)
-//    outPutFileHandle.createNewFile()
-//
-//    val outputImage = BufferedImage(image.width, image.height, TYPE_INT_ARGB)
-//
-//    for (x in 0 until image.width) {
-//        for (y in 0 until image.height) {
-//            val offsetX = x % waterMark.width
-//            val offsetY = y % waterMark.height
-//
-//            val i = Color(image.getRGB(x, y))
-//            val w = Color(waterMark.getRGB(offsetX, offsetY), true)
-//
-//            val alpha = w.alpha
-//
-//            if (alpha == 0) {
-//                color = i
-//            } else if (alpha == 255) {
-//                color = Color(
-//                    (weight * w.red + (100 - weight) * i.red) / 100,
-//                    (weight * w.green + (100 - weight) * i.green) / 100,
-//                    (weight * w.blue + (100 - weight) * i.blue) / 100
-//                )
-//            }
-//
-//            outputImage.setRGB(x, y, color.rgb)
-//        }
-//    }
-//
-//    ImageIO.write(outputImage, "png", outPutFileHandle)
-//    println("The watermarked image $outPutFileName has been created.")
-//}
-//
-//fun drawWatermarkGridNoAlpha() {
-//    setPositionMethod()
-//    val image = ImageIO.read(File(imageFile))
-//    val waterMark = ImageIO.read(File(waterMarkFile))
-//
-//    println("Input the output image filename (jpg or png extension):")
-//    val outPutFileName = readlnOrNull() ?: ""
-//
-//    val outPutFileHandle = File(outPutFileName)
-//    outPutFileHandle.createNewFile()
-//
-//    val outputImage = BufferedImage(image.width, image.height, TYPE_INT_ARGB)
-//
-//    for (x in 0 until image.width) {
-//        for (y in 0 until image.height) {
-//            val offsetX = x % waterMark.width
-//            val offsetY = y % waterMark.height
-//
-//            val i = Color(image.getRGB(x, y))
-//            val w = Color(waterMark.getRGB(offsetX, offsetY), true)
-//
-//            if (w.red == transparencyRed && w.green == transparencyGreen && w.blue == transparencyBlue) {
-//                color = i
-//            } else {
-//                color = Color(
-//                    (weight * w.red + (100 - weight) * i.red) / 100,
-//                    (weight * w.green + (100 - weight) * i.green) / 100,
-//                    (weight * w.blue + (100 - weight) * i.blue) / 100
-//                )
-//            }
-//
-//            outputImage.setRGB(x, y, color.rgb)
-//        }
-//    }
-//
-//    ImageIO.write(outputImage, "png", outPutFileHandle)
-//    println("The watermarked image $outPutFileName has been created.")
-//}
