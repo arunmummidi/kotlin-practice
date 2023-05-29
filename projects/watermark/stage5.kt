@@ -1,7 +1,6 @@
 package watermark
 
 import java.awt.Color
-import java.awt.image.BufferedImage
 import java.awt.image.BufferedImage.*
 import java.io.File
 import java.lang.IndexOutOfBoundsException
@@ -13,16 +12,17 @@ var weight: Int = 0
 var imageFile = ""
 var waterMarkFile = ""
 var useAlpha = "no"
+var specifyBackgroundColor = ""
 var transparencyRed = 0
 var transparencyGreen = 0
 var transparencyBlue = 0
 var diffX = 0
 var diffY = 0
-var waterMarkPositionX = 0
-var waterMarkPositionY = 0
+var waterMarkCoordinateX = 0
+var waterMarkCoordinateY = 0
 var color = Color(255, 255, 255)
 var positionMethod = ""
-//val e = Exception()
+var waterMarkHasAlpha = "no"
 
 fun main() {
     println("Input the image filename:")
@@ -36,59 +36,21 @@ fun main() {
     val image = ImageIO.read(File(imageFile))
     val waterMark = ImageIO.read(File(waterMarkFile))
 
-    diffX = image.width - waterMark.width
-    diffY = image.height - waterMark.height
-
+/*     If the watermark image's dimentions are
+     larger than image's dimenstinos, throw error and stop*/
     if (waterMark.height > image.height || waterMark.width > image.width) {
         println("The watermark's dimensions are larger.")
         exitProcess(1)
     }
 
-    if(waterMark.transparency == TRANSLUCENT) {
-        println("Do you want to use the watermark's Alpha channel?")
-        useAlpha = readln().lowercase()
-        // use alpha channel and produce image
-        readWaterMarkTransparency()
-        createWaterMark()
-        exitProcess(0)
-    } else {
-        println("Do you want to set a transparency color?")
-        val useTransparency = readln().lowercase()
-        if(useTransparency == "yes") {
-            println("Input a transparency color ([Red] [Green] [Blue]):")
-            val inputString = readln().split(' ')
+    diffX = image.width - waterMark.width
+    diffY = image.height - waterMark.height
 
-            try {
-                if (inputString.size != 3) {
-                    println("The transparency color input is invalid.")
-                    exitProcess(1)
-                }
-                for(value in inputString) {
-                    if (value.toInt() !in 0..255) {
-                        println("The transparency color input is invalid.")
-                        exitProcess(1)
-                    }
-                }
-                transparencyRed = inputString[0].toInt()
-                transparencyGreen = inputString[1].toInt()
-                transparencyBlue = inputString[2].toInt()
-            } catch (e: Exception) {
-                when(e) {
-                    is IndexOutOfBoundsException, is NumberFormatException -> {
-                        println("The transparency color input is invalid.")
-                        exitProcess(1)
-                    }
-                }
-            }
+    readAlphaChannel() // Read if alpha channel exists for watermark. If exists, read if alpha channel to be used.
+    readDesiredTransparency() // sets transparency variable "weight". Common step
+    setPositionMethod() // Common step. Read position method single/grid
 
-            readWaterMarkTransparency()
-            createWaterMark()
-            exitProcess(0)
-        }
-    }
-
-    readWaterMarkTransparency()
-    createWaterMark() // Alpha is no
+    invokeAppropriateWaterMark() // Alpha is no
 }
 
 fun sanityCheck(fileName: String, kind: String) {
@@ -111,7 +73,53 @@ fun sanityCheck(fileName: String, kind: String) {
     }
 }
 
-fun readWaterMarkTransparency() {
+fun readAlphaChannel(){
+    // Read if the watermark image has alpha channel component
+    val waterMark = ImageIO.read(File(waterMarkFile))
+    if(waterMark.transparency == TRANSLUCENT) {
+        // Watermark image has alpha channel if transparency is translucent
+        waterMarkHasAlpha = "yes"
+        println("Do you want to use the watermark's Alpha channel?")
+        useAlpha = readln().lowercase()
+    } else {
+        // Watermark image does not have alpha channel
+        /*     If alpha channel is not present, ask user
+        if transparency color needs to be set*/
+        readTransparencyColor()
+    }
+}
+
+fun readTransparencyColor() {
+    println("Do you want to set a transparency color?")
+    specifyBackgroundColor = readln().lowercase()
+    if(specifyBackgroundColor == "yes") {
+        println("Input a transparency color ([Red] [Green] [Blue]):")
+        val inputString = readln().split(' ')
+
+//        Sanity check user input
+        try {
+            for(value in inputString) {
+                if (value.toInt() !in 0..255 || inputString.size != 3) {
+                    println("The transparency color input is invalid.")
+                    exitProcess(1)
+                }
+            }
+            // set transparency values
+            transparencyRed = inputString[0].toInt()
+            transparencyGreen = inputString[1].toInt()
+            transparencyBlue = inputString[2].toInt()
+        } catch (e: Exception) {
+            when(e) {
+                is IndexOutOfBoundsException, is NumberFormatException -> {
+                    println("The transparency color input is invalid.")
+                    exitProcess(1)
+                }
+            }
+        }
+    }
+}
+
+fun readDesiredTransparency() {
 
     try {
         println("Input the watermark transparency percentage (Integer 0-100):")
@@ -127,17 +135,17 @@ fun readWaterMarkTransparency() {
     }
 }
 
-fun createWaterMark() {
+fun setPositionMethod() {
     println("Choose the position method (single, grid):")
     positionMethod = readln()
     when (positionMethod) {
         "single" -> {
             println("Input the watermark position ([x 0-$diffX] [y 0-$diffY]):")
-            val waterMarkPositionString = readln().split(' ')
+            val waterMarkCoordinates = readln().split(' ')
             try {
-                waterMarkPositionX = waterMarkPositionString[0].toInt()
-                waterMarkPositionY = waterMarkPositionString[1].toInt()
-                if (waterMarkPositionX !in 0..diffX || waterMarkPositionY !in 0..diffY ) {
+                waterMarkCoordinateX = waterMarkCoordinates[0].toInt()
+                waterMarkCoordinateY = waterMarkCoordinates[1].toInt()
+                if (waterMarkCoordinateX !in 0..diffX || waterMarkCoordinateY !in 0..diffY ) {
                     println("The position input is out of range.")
                     exitProcess(1)
                 }
@@ -147,47 +155,68 @@ fun createWaterMark() {
             }
         }
         "grid" -> {
-
+            /*Position method variable is already set to grid. Don't perform calculations here.*/
         }
         else -> {
             println("The position method input is invalid.")
             exitProcess(1)
         }
     }
+}
 
+fun invokeAppropriateWaterMark() {
+
+    when {
+        useAlpha == "yes" && positionMethod == "single" -> {
+            drawAlphaSingle()
+            exitProcess(0)
+        }
+        useAlpha == "yes" && positionMethod == "grid" -> {
+            // Grid
+            drawAlphaGrid()
+            exitProcess(0)
+        }
+        waterMarkHasAlpha == "no" && specifyBackgroundColor == "yes" && positionMethod == "grid" -> {
+            // Grid
+            drawNoAlphaBackgroundGrid()
+            exitProcess(0)
+        }
+        useAlpha == "no" && positionMethod == "single" && specifyBackgroundColor == "yes" -> {
+            drawNoAlphaSingleBackground()
+            exitProcess(0)
+        }
+    }
+}
+
+fun readOutPutFile(): File {
     println("Input the output image filename (jpg or png extension):")
     val outPutFileName = readln()
 
     val validFormat = outPutFileName.contains(".jpg") || outPutFileName.contains(".png")
-
     if (!validFormat) {
         // Terminate on invalid format
         println("The output file extension isn't \"jpg\" or \"png\".")
         exitProcess(1)
     }
+    return File(outPutFileName) // Return output file descriptor
+}
 
+fun drawNoAlphaSingleBackground() {
+    /*Load buffered images of image file
+    and Watermark file.*/
     val image = ImageIO.read(File(imageFile))
     val waterMark = ImageIO.read(File(waterMarkFile))
 
-    val outPutFileHandle = File(outPutFileName)
+    /*Read and validate output file name.
+    Get its file descriptor if valid.*/
+    val outPutFileHandle = readOutPutFile()
     outPutFileHandle.createNewFile()
 
-    if (useAlpha == "yes"){
-        // Consider alpha values during watermarking
-        if (positionMethod == "single") {
-            drawWatermark()
-            exitProcess(0)
-        }
-    }
-
-    // Do non alpha calculations if user chose to not use Alpha component
-    val outputImage = BufferedImage(image.width, image.height, TYPE_INT_ARGB) // No alpha
-
-    for (y in 0 until image.height){
-        for (x in 0 until image.width) {
-            val i = Color(image.getRGB(x, y))
+    for (y in 0 until waterMark.height){
+        for (x in 0 until waterMark.width) {
+            val i = Color(image.getRGB(x + waterMarkCoordinateX, y + waterMarkCoordinateY))
             val w = Color(waterMark.getRGB(x, y))
-            var color = Color(255,255,255)
+//            var color = Color(255,255,255)
             if (w.red == transparencyRed && w.green == transparencyGreen && w.blue == transparencyBlue) {
                 color = i
             } else {
@@ -197,31 +226,32 @@ fun createWaterMark() {
                     (weight * w.blue + (100 - weight) * i.blue) / 100
                 )
             }
-            outputImage.setRGB(x, y, color.rgb)
+            image.setRGB(x + waterMarkCoordinateX, y + waterMarkCoordinateY, color.rgb)
         }
     }
 
-    ImageIO.write(outputImage, "png", outPutFileHandle)
-    println("The watermarked image $outPutFileName has been created.")
+    ImageIO.write(image, "png", outPutFileHandle)
+    println("The watermarked image ${outPutFileHandle.name} has been created.")
 }
 
-fun drawWatermark() {
+fun drawAlphaSingle() {
+    /*Load buffered images of image file
+    and Watermark file.*/
     val image = ImageIO.read(File(imageFile))
     val waterMark = ImageIO.read(File(waterMarkFile))
 
-    println("Input the output image filename (jpg or png extension):")
-    val outPutFileName = readln()
-
-    val outPutFileHandle = File(outPutFileName)
+    /*Read and validate output file name.
+    Get its file descriptor if valid.*/
+    val outPutFileHandle = readOutPutFile()
     outPutFileHandle.createNewFile()
 
-    for (x in waterMarkPositionX until waterMark.width){
-        for (y in waterMarkPositionY until waterMark.height) {
+    for (x in waterMarkCoordinateX until waterMark.width + waterMarkCoordinateX){
+        for (y in waterMarkCoordinateY until waterMark.height + waterMarkCoordinateY) {
             val i = Color(image.getRGB(x, y))
-            val w = Color(waterMark.getRGB(x - waterMarkPositionX, y - waterMarkPositionY), true)
+            val w = Color(waterMark.getRGB(x - waterMarkCoordinateX, y - waterMarkCoordinateY), true)
 
             when(w.alpha) {
-                0 -> color = i //output pixel should be image pixel
+                0 -> color = i // If watermark pixel's alpha is 0 (transparent), output pixel should be image pixel
                 255 -> {
                     color = Color(
                         (weight * w.red + (100 - weight) * i.red) / 100,
@@ -233,6 +263,203 @@ fun drawWatermark() {
             image.setRGB(x, y, color.rgb)
         }
     }
+
     ImageIO.write(image, "png", outPutFileHandle)
-    println("The watermarked image $outPutFileName has been created.")
+    println("The watermarked image ${outPutFileHandle.name} has been created.")
 }
+
+fun drawNoAlphaBackgroundGrid() {
+
+    /*Load buffered images of image file
+    and Watermark file.*/
+    val image = ImageIO.read(File(imageFile))
+    val waterMark = ImageIO.read(File(waterMarkFile))
+
+    /*Read and validate output file name.
+    Get its file descriptor if valid.*/
+    val outPutFileHandle = readOutPutFile()
+    outPutFileHandle.createNewFile()
+    var offsetX = 0
+    var offsetY = 0
+    for (x in 0 until image.width) {
+        for (y in 0 until image.height) {
+//            val offsetX = x % waterMark.width
+//            val offsetY = y % waterMark.height
+
+            if (x == waterMark.width) {
+                offsetX = 0
+            }
+            if (y == waterMark.height) {
+                offsetY = 0
+            }
+
+            val i = Color(image.getRGB(x, y))
+            val w = Color(waterMark.getRGB(offsetX, offsetY))
+
+            if (w.red == transparencyRed && w.green == transparencyGreen && w.blue == transparencyBlue) {
+                color = i
+            } else {
+                color = Color(
+                    (weight * w.red + (100 - weight) * i.red) / 100,
+                    (weight * w.green + (100 - weight) * i.green) / 100,
+                    (weight * w.blue + (100 - weight) * i.blue) / 100
+                )
+            }
+            image.setRGB(x, y, color.rgb)
+            ++offsetX
+            ++offsetY
+        }
+    }
+    ImageIO.write(image, "png", outPutFileHandle)
+    println("The watermarked image ${outPutFileHandle.name} has been created.")
+}
+
+fun drawAlphaGrid() {
+
+    /*Load buffered images of image file
+and Watermark file.*/
+    val image = ImageIO.read(File(imageFile))
+    val waterMark = ImageIO.read(File(waterMarkFile))
+
+    /*Read and validate output file name.
+    Get its file descriptor if valid.*/
+    val outPutFileHandle = readOutPutFile()
+    outPutFileHandle.createNewFile()
+
+    for (x in 0 until image.width) {
+        for (y in 0 until image.height) {
+            val offsetX = x % waterMark.width
+            val offsetY = y % waterMark.height
+
+            val i = Color(image.getRGB(x, y))
+            val w = Color(waterMark.getRGB(offsetX, offsetY), true)
+
+            when(w.alpha) {
+                0 -> color = i
+                else -> color = Color(
+                    (weight * w.red + (100 - weight) * i.red) / 100,
+                    (weight * w.green + (100 - weight) * i.green) / 100,
+                    (weight * w.blue + (100 - weight) * i.blue) / 100
+                )
+            }
+
+            image.setRGB(x, y, color.rgb)
+        }
+    }
+    ImageIO.write(image, "png", outPutFileHandle)
+    println("The watermarked image ${outPutFileHandle.name} has been created.")
+}
+
+
+
+
+//fun drawWatermark() {
+//    val image = ImageIO.read(File(imageFile))
+//    val waterMark = ImageIO.read(File(waterMarkFile))
+//
+//    println("Input the output image filename (jpg or png extension):")
+//    val outPutFileName = readln()
+//
+//    val outPutFileHandle = File(outPutFileName)
+//    outPutFileHandle.createNewFile()
+//
+//    for (x in waterMarkCoordinateX until waterMark.width){
+//        for (y in waterMarkCoordinateY until waterMark.height) {
+//            val i = Color(image.getRGB(x, y))
+//            val w = Color(waterMark.getRGB(x - waterMarkCoordinateX, y - waterMarkCoordinateY), true)
+//
+//            when(w.alpha) {
+//                0 -> color = i //output pixel should be image pixel
+//                255 -> {
+//                    color = Color(
+//                        (weight * w.red + (100 - weight) * i.red) / 100,
+//                        (weight * w.green + (100 - weight) * i.green) / 100,
+//                        (weight * w.blue + (100 - weight) * i.blue) / 100
+//                    )
+//                }
+//            }
+//            image.setRGB(x, y, color.rgb)
+//        }
+//    }
+//    ImageIO.write(image, "png", outPutFileHandle)
+//    println("The watermarked image $outPutFileName has been created.")
+//}
+//
+//fun drawWatermarkGrid() {
+//    val image = ImageIO.read(File(imageFile))
+//    val waterMark = ImageIO.read(File(waterMarkFile))
+//
+//    println("Input the output image filename (jpg or png extension):")
+//    val outPutFileName = readlnOrNull() ?: ""
+//
+//    val outPutFileHandle = File(outPutFileName)
+//    outPutFileHandle.createNewFile()
+//
+//    val outputImage = BufferedImage(image.width, image.height, TYPE_INT_ARGB)
+//
+//    for (x in 0 until image.width) {
+//        for (y in 0 until image.height) {
+//            val offsetX = x % waterMark.width
+//            val offsetY = y % waterMark.height
+//
+//            val i = Color(image.getRGB(x, y))
+//            val w = Color(waterMark.getRGB(offsetX, offsetY), true)
+//
+//            val alpha = w.alpha
+//
+//            if (alpha == 0) {
+//                color = i
+//            } else if (alpha == 255) {
+//                color = Color(
+//                    (weight * w.red + (100 - weight) * i.red) / 100,
+//                    (weight * w.green + (100 - weight) * i.green) / 100,
+//                    (weight * w.blue + (100 - weight) * i.blue) / 100
+//                )
+//            }
+//
+//            outputImage.setRGB(x, y, color.rgb)
+//        }
+//    }
+//
+//    ImageIO.write(outputImage, "png", outPutFileHandle)
+//    println("The watermarked image $outPutFileName has been created.")
+//}
+//
+//fun drawWatermarkGridNoAlpha() {
+//    setPositionMethod()
+//    val image = ImageIO.read(File(imageFile))
+//    val waterMark = ImageIO.read(File(waterMarkFile))
+//
+//    println("Input the output image filename (jpg or png extension):")
+//    val outPutFileName = readlnOrNull() ?: ""
+//
+//    val outPutFileHandle = File(outPutFileName)
+//    outPutFileHandle.createNewFile()
+//
+//    val outputImage = BufferedImage(image.width, image.height, TYPE_INT_ARGB)
+//
+//    for (x in 0 until image.width) {
+//        for (y in 0 until image.height) {
+//            val offsetX = x % waterMark.width
+//            val offsetY = y % waterMark.height
+//
+//            val i = Color(image.getRGB(x, y))
+//            val w = Color(waterMark.getRGB(offsetX, offsetY), true)
+//
+//            if (w.red == transparencyRed && w.green == transparencyGreen && w.blue == transparencyBlue) {
+//                color = i
+//            } else {
+//                color = Color(
+//                    (weight * w.red + (100 - weight) * i.red) / 100,
+//                    (weight * w.green + (100 - weight) * i.green) / 100,
+//                    (weight * w.blue + (100 - weight) * i.blue) / 100
+//                )
+//            }
+//
+//            outputImage.setRGB(x, y, color.rgb)
+//        }
+//    }
+//
+//    ImageIO.write(outputImage, "png", outPutFileHandle)
+//    println("The watermarked image $outPutFileName has been created.")
+//}
