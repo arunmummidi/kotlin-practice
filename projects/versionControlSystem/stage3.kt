@@ -39,8 +39,10 @@ fun main(args: Array<String>) {
 
 
 fun writeLog(commitId: String, message: String) {
+    val authorName = File(vcsConfig).readText()
+    File(vcsLog).
     File(vcsLog).appendText("commit $commitId\n")
-    File(vcsLog).appendText("Author: $commitId")
+    File(vcsLog).appendText("Author: $authorName\n")
     File(vcsLog).appendText(message + "\n")
 }
 
@@ -55,7 +57,7 @@ fun commit(message: String) {
     val md = MessageDigest.getInstance("SHA-256")
 
     for(fileName in File(vcsIndex).readLines()) {
-        var destinationFile = vcsCommits + separator + commitID + separator + fileName
+        val destinationFile = vcsCommits + separator + commitID + separator + fileName
         if(File(destinationFile).exists()){
             if(md.digest(File(fileName).readBytes()).contentEquals(md.digest(File(destinationFile).readBytes()))) {
                 println("Nothing to commit.")
