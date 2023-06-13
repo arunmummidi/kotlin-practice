@@ -1,17 +1,19 @@
+package svcs
+
 import java.io.File
-import java.nio.file.Files
+import java.io.FileWriter
 import java.security.MessageDigest
 import java.util.*
 
 val md: MessageDigest = MessageDigest.getInstance("SHA-256")
 val separator: String? = File.separator
-val vcsRootDir = "vcs"
+const val vcsRootDir = "vcs"
 val vcsCommits = vcsRootDir + separator + "commits"
 val vcsConfig = vcsRootDir + separator + "config.txt"
 val vcsIndex = vcsRootDir + separator + "index.txt"
 val vcsLog = vcsRootDir + separator + "log.txt"
+val vcsLogTemp = vcsRootDir + separator + "log_temp.txt"
 var currentCommitID = ""
-var stagedChanges = ""
 
 fun main(args: Array<String>) {
     createFileStructure()
@@ -19,13 +21,13 @@ fun main(args: Array<String>) {
         "null", null, "--help" -> printHelpInfo()
         "config" -> {
             if(args.size > 1){
-                writeConfig(args[1].toString())
+                writeConfig(args[1]) //here
             } else showConfig()
         }
         "add" -> {
             // Append file name to index file if add invoked with file name
             if(args.size > 1) {
-                addFileToStaging(args[1].toString())
+                addFileToStaging(args[1]) //here
             } else {
                 // If add invoked with no arguments, show the added files
                 showStagedFiles()
@@ -33,11 +35,9 @@ fun main(args: Array<String>) {
         }
         "log" -> showLog()
         "commit" -> if(args.size > 1) {
-            stagedChanges = hasNewChanges()
             if(hasNewChanges() == "changed") {
-                commit(args[1].toString())
+                commit(args[1]) //here
             } else println("Nothing to commit.")
-
         }else {
             println("Message was not passed.")
         }
@@ -49,33 +49,31 @@ fun main(args: Array<String>) {
 fun hasNewChanges(): String {
     if(File(vcsLog).readText().isNotEmpty()){
         val lastCommitDirectory = File(vcsLog).readText().substringAfter(' ').substringBefore('\n')
-        println(vcsCommits + separator + lastCommitDirectory)
         val files = File(vcsCommits + separator + lastCommitDirectory).listFiles()
 
         for(committedFile in files!!) {
             for(sourceFile in File(vcsIndex).readLines()) {
                 if(sourceFile == committedFile.name){
-                    println("$sourceFile version exists")
                     if(!md.digest(File(sourceFile).readBytes()).contentEquals(md.digest(committedFile.readBytes()))) {
                         return "changed"
                     }
                 }
             }
         }
-    }
-    return "not changed"
+        return "not changed"
+    } else return "changed"
 }
 
 fun writeLog(commitId: String, message: String) {
     val authorName = File(vcsConfig).readText()
 
-    File(vcsLog).appendText("commit $commitId\n")
-    File(vcsLog).appendText("Author: $authorName\n")
-    File(vcsLog).appendText(message + "\n")
+    FileWriter(vcsLog, false).use{it.write("commit $commitId\nAuthor: $authorName\n$message\n\n" + File(vcsLogTemp).readText())}
+//    FileWriter(svcs.getVcsLogTemp, false).use{it.write(File(svcs.getVcsLogTemp).readText())}
+    File(vcsLog).copyTo(File(vcsLogTemp), overwrite = true)
 }
 
 fun showLog() {
-    if(File(vcsLog).readLines().size != 0) {
+    if(File(vcsLog).readLines().isNotEmpty()) {
         println(File(vcsLog).readText())
     } else println("No commits yet.")
 }
@@ -85,12 +83,6 @@ fun commit(message: String) {
 
     for(fileName in File(vcsIndex).readLines()) {
         val destinationFile = vcsCommits + separator + commitID + separator + fileName
-//        if(File(destinationFile).exists()){
-//            if(md.digest(File(fileName).readBytes()).contentEquals(md.digest(File(destinationFile).readBytes()))) {
-//                println("Nothing to commit.")
-//                break
-//            }
-//        }
 
         File(vcsCommits + separator + commitID).mkdir()
         File(fileName).copyTo(File(destinationFile))
@@ -112,6 +104,7 @@ fun createFileStructure() {
     if(!File(vcsConfig).exists()) File(vcsConfig).createNewFile()
     if(!File(vcsIndex).exists()) File(vcsIndex).createNewFile()
     if(!File(vcsLog).exists()) File(vcsLog).createNewFile()
+    if(!File(vcsLogTemp).exists()) File(vcsLogTemp).createNewFile()
 }
 
 fun addFileToStaging(fileName: String) {
@@ -150,7 +143,7 @@ fun writeConfig(userName: String) {
 fun showConfig() {
     if(File(vcsConfig).readBytes().isEmpty()) {
         println("Please, tell me who you are.")
-    } else println("The username is ${File(vcsConfig).readText().toString().trim('\n')}.")
+    } else println("The username is ${File(vcsConfig).readText().trim('\n')}.") //here
 }
 
 fun showStagedFiles() {
@@ -163,5 +156,3 @@ fun showStagedFiles() {
         println(charArray)
     }
 }
-
-
