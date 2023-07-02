@@ -28,7 +28,7 @@ fun main() {
     }
     println(inputList[2].joinToString(separator = ", "))
 
-//    Multi dimentional arrays 3x3x3
+// Multi dimentional arrays 3x3x3
     val intList: MutableList<MutableList<MutableList<Int>>> = mutableListOf(
         mutableListOf(
             mutableListOf(0, 0, 0),
@@ -47,3 +47,4 @@ fun main() {
         )
     )
     println(intList)
+}
