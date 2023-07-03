@@ -83,4 +83,45 @@ fun main() {
 [38;5;130m 53 [m//    val immutableset = setOf("earth", "moon", "mercury", "mercury") //duplicates are ignored
 [38;5;130m 54 [m//    println(immutableset)
 [38;5;130m 55 [m//[38;1H[K[38;133H19,1[11C3%[1;5H[?25h[?25l[10C[4m-1, 1, 2 -> println("It's as cold as it gets") // 2[m[38;137H2[1;16H[?25h[?25l[38;1HType  :qa!  and press <Enter> to abandon all changes and exit Vim[38;133H[K[38;133H19,12[10C3%[1;16H[?25h[?25l[38;133H[K[38;133H19,12[10C3%[1;16H[?25h[?25l[38;133H[K[38;133H19,12[10C3%[1;16H[?25h[?25l[38;133H[K[38;133H19,12[10C3%[1;16H[?25h[?25l[38;133H[K[38;133H19,12[10C3%[1;16H[?25h[38;1H
-[?1004l[?2004l[?1l>[>4;m[?1049l[23;0;0t
+[?1004l[?2004l[?1l>[>4;m[?1049l[23;0;0t[?25h[?25h[?1049h[22;0;0t[>4;2m[?1h=[?2004h[?1004h[?12h[?12l[27m[23m[29m[m[H[2J[?25l[1;1H[4m[38;5;130m 19 [m[4m//        -1, 1, 2 -> println("It's as cold as it gets") // 2                                                                                     [m[2;1H[38;5;130m 20 [m//[8Cin 300..699 -> println("This temperature is also possible on Mercury") // 3
+[38;5;130m 21 [m//[8C!in 0..300 -> println("This is pretty hot") // 4
+[38;5;130m 22 [m//[8Cis Int -> println("Given variable is of type Int") // 6
+[38;5;130m 23 [m//[8Celse -> { // 7
+[38;5;130m 24 [m//[12C// You can also use blocks of code on the right hand side, like here
+[38;5;130m 25 [m//[12Cprintln("Default case")
+[38;5;130m 26 [m//[8C}
+[38;5;130m 27 [m//    }
+[38;5;130m 28 
+ 29 [m//    // For loops
+[38;5;130m 30 [m//    val planets= arrayOf("earth", "venus", "neptune") //string arrays
+[38;5;130m 31 [m//    for (i in 1 .. 5) println("hello")
+[38;5;130m 32 [m//    for (i in 1 until 5) println("wow")
+[38;5;130m 33 [m//    for (i in planets) println("$i")
+[38;5;130m 34 
+ 35 [m////infix functions
+[38;5;130m 36 [m//    val total = sum(1,3)
+[38;5;130m 37 [m//    println(total)
+[38;5;130m 38 [m//    val str1 = "Hello"
+[38;5;130m 39 [m//    val str2 = "Hello"
+[38;5;130m 40 [m//    val result = str1 arun_fun str2
+[38;5;130m 41 [m//    println(result)
+[38;5;130m 42 
+ 43 
+ 44 [m////Collections
+[38;5;130m 45 [m//    val immutablelist = listOf("arun", "ramu")
+[38;5;130m 46 [m//    println(immutablelist[0])
+[38;5;130m 47 [m//
+[38;5;130m 48 [m//    val mutablelist = mutableListOf("goa", "Khatmandu")
+[38;5;130m 49 [m//    println(mutablelist[0])
+[38;5;130m 50 [m//    mutablelist.add("Ranchi")
+[38;5;130m 51 [m//    println(mutablelist)
+[38;5;130m 52 [m//
+[38;5;130m 53 [m//    val immutableset = setOf("earth", "moon", "mercury", "mercury") //duplicates are ignored
+[38;5;130m 54 [m//    println(immutableset)
+[38;5;130m 55 [m//[38;133H19,12[10C3%[1;16H[?25h[38;1H
+[32mW12: Warning: File "../../basicsPractice.kt" has changed and the buffer was changed in Vim as well[m
+[32mSee ":help W12" for more info.[m
+[32m[O]K, (L)oad File: [m[?1004l[?2004l[?1l>[>4;m[?1049l[23;0;0tVim: Caught deadly signal HUP
+Vim: preserving files...
+Vim: Finished.
+[38;1H[23;2t[23;1t
